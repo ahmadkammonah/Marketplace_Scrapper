@@ -4,15 +4,17 @@ import requests
 from PIL import Image
 
 # Create a title for the web app.
-st.title("Passivebot's Facebook Marketplace Scraper")
+st.title("Kammo's Facebook Marketplace Scraper")
 
 # Add a list of supported cities.
-supported_cities = ["New York", "Los Angeles", "Las Vegas", "Chicago", "Houston", "San Antonio", "Miami", "Orlando", "San Diego", "Arlington", "Baltimore", "Cincinnati", "Denver", "Fort Worth", "Jacksonville", "Memphis", "Nashville", "Philadelphia", "Portland", "San Jose", "Tucson", "Atlanta", "Boston", "Columbus", "Detroit", "Honolulu", "Kansas City", "New Orleans", "Phoenix", "Seattle", "Washington DC", "Milwaukee", "Sacramento", "Austin", "Charlotte", "Dallas", "El Paso", "Indianapolis", "Louisville", "Minneapolis", "Oklahoma City", "Pittsburgh", "San Francisco", "Tampa"]
+supported_cities = ["halifax", "New York", "Los Angeles", "Las Vegas", "Chicago", "Houston", "San Antonio", "Miami", "Orlando", "San Diego", "Arlington", "Baltimore", "Cincinnati", "Denver", "Fort Worth", "Jacksonville", "Memphis", "Nashville", "Philadelphia", "Portland", "San Jose", "Tucson", "Atlanta", "Boston", "Columbus", "Detroit", "Honolulu", "Kansas City", "New Orleans", "Phoenix", "Seattle", "Washington DC", "Milwaukee", "Sacramento", "Austin", "Charlotte", "Dallas", "El Paso", "Indianapolis", "Louisville", "Minneapolis", "Oklahoma City", "Pittsburgh", "San Francisco", "Tampa"]
+supported_radius = [1, 2, 5, 10, 20]
 
 # Take user input for the city, query, and max price.
 city = st.selectbox("City", supported_cities, 0)
-query = st.text_input("Query", "Macbook Pro")
+query = st.text_input("Query", "One Bedroom")
 max_price = st.text_input("Max Price", "1000")
+radius = st.text_input("Radius", "10")
 
 # Create a button to submit the form.
 submit = st.button("Submit")
@@ -24,7 +26,7 @@ if submit:
         max_price = max_price.replace(",", "")
     else:
         pass
-    res = requests.get(f"http://127.0.0.1:8000/crawl_facebook_marketplace?city={city}&query={query}&max_price={max_price}"
+    res = requests.get(f"http://127.0.0.1:8000/crawl_facebook_marketplace?city={city}&query={query}&max_price={max_price}&radius={radius}"
     )
     
     # Convert the response from json into a Python list.
@@ -42,8 +44,3 @@ if submit:
         st.write(item["location"])
         st.write(f"https://www.facebook.com{item['link']}")
         st.write("----")
-    
-
-      
-
-

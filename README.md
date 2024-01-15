@@ -8,7 +8,7 @@
 <h3 align="center">
 
 ```diff
-You use the software provided at your own risk. I cannot be held responsible for any potential consequences, including potential bans from Meta.
+You use the software provided at your own risk.
 ```
 ### Overview
 This open-source program uses Python to scrape data from Facebook Marketplace. The program uses Playwright to navigate the Facebook Marketplace website and BeautifulSoup to parse the HTML and extract relevant data. It then displays the results in a Streamlit GUI.
@@ -53,3 +53,6 @@ This program can be customized to your personal/organizational needs. For more i
 - User inputs for city, search query, and maximum price.
 - Submission button to start scraping.
 - Display of scraping results including number of results, images, prices, locations, and item URLs.
+
+### Credit: 
+Forked originally [Harminder Singh Nijjar](https://github.com/harmindersinghnijjar)

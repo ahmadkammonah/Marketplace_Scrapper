@@ -21,7 +21,8 @@ import json
 # The uvicorn library is used to run the API.
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
-                 
+import csv
+
 # Create an instance of the FastAPI class.
 app = FastAPI()
 # Configure CORS
@@ -45,66 +46,25 @@ app.add_middleware(
 # Define a function to be executed when the endpoint is called.
 def root():
     # Return a message.
-    return {"message": "Welcome to Passivebot's Facebook Marketplace API. Documentation is currently being worked on along with the API. Some planned features currently in the pipeline are a ReactJS frontend, MongoDB database, and Google Authentication."}
+    return {
+        "message": "Welcome to Passivebot's Facebook Marketplace API. Documentation is currently being worked on along with the API. Some planned features currently in the pipeline are a ReactJS frontend, MongoDB database, and Google Authentication."}
 
     # TODO - Add documentation to the API.
     # TODO - Add a React frontend to the API.
     # TODO - Add a MongoDB database to the API.
     # TODO - Add Google Authentication to the React frontend.
 
+
 # Create a route to the return_data endpoint.
 @app.get("/crawl_facebook_marketplace")
 # Define a function to be executed when the endpoint is called.
 # Add a description to the function.
-def crawl_facebook_marketplace(city: str, query: str, max_price: int):
+def crawl_facebook_marketplace(city: str, query: str, max_price: int, min_price: int, sortBy: str, radius: int, ):
     # Define dictionary of cities from the facebook marketplace directory for United States.
     # https://m.facebook.com/marketplace/directory/US/?_se_imp=0oey5sMRMSl7wluQZ
     # TODO - Add more cities to the dictionary.
     cities = {
-        'New York': 'nyc',
-        'Los Angeles': 'la',
-        'Las Vegas': 'vegas',
-        'Chicago': 'chicago',
-        'Houston': 'houston',
-        'San Antonio': 'sanantonio',
-        'Miami': 'miami',
-        'Orlando': 'orlando',
-        'San Diego': 'sandiego',
-        'Arlington': 'arlington',
-        'Balitmore': 'baltimore',
-        'Cincinnati': 'cincinnati',
-        'Denver': 'denver',
-        'Fort Worth': 'fortworth',
-        'Jacksonville': 'jacksonville',
-        'Memphis': 'memphis',
-        'Nashville': 'nashville',
-        'Philadelphia': 'philly',
-        'Portland': 'portland',
-        'San Jose': 'sanjose',
-        'Tucson': 'tucson',
-        'Atlanta': 'atlanta',
-        'Boston': 'boston',
-        'Columnbus': 'columbus',
-        'Detroit': 'detroit',
-        'Honolulu': 'honolulu',
-        'Kansas City': 'kansascity',
-        'New Orleans': 'neworleans',
-        'Phoenix': 'phoenix',
-        'Seattle': 'seattle',
-        'Washington DC': 'dc',
-        'Milwaukee': 'milwaukee',
-        'Sacremento': 'sac',
-        'Austin': 'austin',
-        'Charlotte': 'charlotte',
-        'Dallas': 'dallas',
-        'El Paso': 'elpaso',
-        'Indianapolis': 'indianapolis',
-        'Louisville': 'louisville',
-        'Minneapolis': 'minneapolis',
-        'Oaklahoma City' : 'oklahoma',
-        'Pittsburgh': 'pittsburgh',
-        'San Francisco': 'sanfrancisco',
-        'Tampa': 'tampa'
+        'halifax': 'halifax',
     }
     # If the city is in the cities dictionary...
     if city in cities:
@@ -116,11 +76,13 @@ def crawl_facebook_marketplace(city: str, query: str, max_price: int):
         # Capitalize only the first letter of the city.
         city = city.capitalize()
         # Raise an HTTPException.
-        raise HTTPException (404, f'{city} is not a city we are currently supporting on the Facebook Marketplace. Please reach out to us to add this city in our directory.')
+        raise HTTPException(404,
+                            f'{city} is not a city we are currently supporting on the Facebook Marketplace. Please reach out to us to add this city in our directory.')
         # TODO - Try and find a way to get city location ids from Facebook if the city is not in the cities dictionary.
-        
+
     # Define the URL to scrape.
-    marketplace_url = f'https://www.facebook.com/marketplace/{city}/search/?query={query}&maxPrice={max_price}'
+    # marketplace_url = f'https://www.facebook.com/marketplace/{city}/search/?query={query}minPrice=400&maxPrice={max_price}&radius={radius}&sortBy=price_descend&exact=true'
+    marketplace_url = f'https://www.facebook.com/marketplace/{city}/propertyrentals?query={query}&minBedrooms=1&maxPrice={max_price}&minPrice={min_price}&sortBy={sortBy}&maxAreaSize=1000&exact=false&latitude=44.633&longitude=-63.6092&radius={radius}'
     initial_url = "https://www.facebook.com/login/device-based/regular/login/"
     # Get listings of particular item in a particular city for a particular price.
     # Initialize the session using Playwright.
@@ -130,27 +92,32 @@ def crawl_facebook_marketplace(city: str, query: str, max_price: int):
         page = browser.new_page()
         # Navigate to the URL.
         page.goto(initial_url)
+        # page.goto(marketplace_url)
         # Wait for the page to load.
         time.sleep(2)
+
         try:
-            email_input = page.wait_for_selector('input[name="email"]').fill('YOUR_EMAIL_HERE')
-            password_input = page.wait_for_selector('input[name="pass"]').fill('YOUR_PASSWORD_HERE')
+            email_input = page.wait_for_selector('input[name="email"]').fill('USERNAME')
+            password_input = page.wait_for_selector('input[name="pass"]').fill('PASSWORD')
             time.sleep(2)
             login_button = page.wait_for_selector('button[name="login"]').click()
-            time.sleep(2)
+            time.sleep(5)
             page.goto(marketplace_url)
         except:
             page.goto(marketplace_url)
         # Wait for the page to load.
         time.sleep(2)
+
         # Infinite scroll to the bottom of the page until the loop breaks.
-        # for _ in range(5):
-        #     page.keyboard.press('End')
-        #     time.sleep(2)
+        for _ in range(5):
+            page.keyboard.press('End')
+            time.sleep(2)
+
         html = page.content()
         soup = BeautifulSoup(html, 'html.parser')
         parsed = []
-        listings = soup.find_all('div', class_='x9f619 x78zum5 x1r8uery xdt5ytf x1iyjqo2 xs83m0k x1e558r4 x150jy0e x1iorvi4 xjkvuk6 xnpuxes x291uyu x1uepa24')
+        listings = soup.find_all('div',
+                                 class_='x9f619 x78zum5 x1r8uery xdt5ytf x1iyjqo2 xs83m0k x1e558r4 x150jy0e x1iorvi4 xjkvuk6 xnpuxes x291uyu x1uepa24')
         for listing in listings:
             try:
                 # Get the item image.
@@ -158,11 +125,16 @@ def crawl_facebook_marketplace(city: str, query: str, max_price: int):
                 # Get the item title from span.
                 title = listing.find('span', 'x1lliihq x6ikm8r x10wlt62 x1n2onr6').text
                 # Get the item price.
-                price = listing.find('span', 'x193iq5w xeuugli x13faqbe x1vvkbs x1xmvt09 x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x xudqn12 x676frb x1lkfr7t x1lbecb7 x1s688f xzsf02u').text
+                price = listing.find('span',
+                                     'x193iq5w xeuugli x13faqbe x1vvkbs x1xmvt09 x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x xudqn12 x676frb x1lkfr7t x1lbecb7 x1s688f xzsf02u').text
                 # Get the item URL.
-                post_url = listing.find('a', class_='x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz x1heor9g x1lku1pv')['href']
+                post_url = listing.find('a',
+                                        class_='x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz x1heor9g x1lku1pv')[
+                    'href']
+
                 # Get the item location.
                 location = listing.find('span', 'x1lliihq x6ikm8r x10wlt62 x1n2onr6 xlyipyv xuxw1ft x1j85h84').text
+
                 # Append the parsed data to the list.
                 parsed.append({
                     'image': image,
@@ -173,9 +145,11 @@ def crawl_facebook_marketplace(city: str, query: str, max_price: int):
                 })
             except:
                 pass
+
         # Close the browser.
         browser.close()
         # Return the parsed data as a JSON.
+        # save_to_csv(parsed, "ParsedData")
         result = []
         for item in parsed:
             result.append({
@@ -187,6 +161,7 @@ def crawl_facebook_marketplace(city: str, query: str, max_price: int):
                 'link': item['post_url']
             })
         return result
+
 
 # Create a route to the return_html endpoint.
 @app.get("/return_ip_information")
@@ -232,8 +207,8 @@ def return_ip_information():
             'version': version
         }
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     # Run the app.
     uvicorn.run(
         # Specify the app as the FastAPI app.
